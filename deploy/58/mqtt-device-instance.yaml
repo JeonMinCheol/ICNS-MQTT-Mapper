@@ -1,0 +1,44 @@
+apiVersion: devices.kubeedge.io/v1alpha2
+kind: Device
+metadata:
+  name: mqtt-device-58
+spec:
+  deviceModelRef:
+    name: mqtt-model
+  protocol:
+    customizedProtocol:
+      protocolName: mqtt
+      configData:
+        server: tcp://163.180.117.58:1883
+        username: ""
+        password: ""
+        certification: ""
+        inputTopic: mqtt/input/device/%s/delta
+        outputTopic: mqtt/output/device/%s/delta
+  nodeSelector:
+    nodeSelectorTerms:
+    - matchExpressions:
+      - key: ''
+        operator: In
+        values:
+        - worker1
+  propertyVisitors:
+    - propertyName: switch
+      customizedProtocol:
+        protocolName: mqtt
+        configData:
+            topicField: switch
+status:
+  twins:
+    - propertyName: switch
+      reported:
+        metadata:
+          timestamp: '1550049403598'
+          type: int
+        value: "0"
+      desired:
+        metadata:
+          timestamp: '1550049403598'
+          type: int
+        value: "0"
+
