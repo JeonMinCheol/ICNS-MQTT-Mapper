@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package message;
+
+service sendParams{
+ rpc sendParamsToEdge(Message) returns (Time) {}
+ rpc sendParamsToCore(Message) returns (MessageResponse) {}
+}
+
+message Message {
+  string device = 1;
+  bytes model = 2;
+}
+
+message MessageResponse{
+ bytes model = 1;
+}
+
+message Time{
+ float time = 1;
+}
