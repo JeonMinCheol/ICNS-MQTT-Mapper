@@ -14,28 +14,17 @@ class sendParamsStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.sendParamsToEdge = channel.unary_unary(
-                '/message.sendParams/sendParamsToEdge',
-                request_serializer=message__pb2.Message.SerializeToString,
-                response_deserializer=message__pb2.Time.FromString,
-                )
-        self.sendParamsToCore = channel.unary_unary(
-                '/message.sendParams/sendParamsToCore',
-                request_serializer=message__pb2.Message.SerializeToString,
-                response_deserializer=message__pb2.MessageResponse.FromString,
+        self.uplink = channel.unary_unary(
+                '/message.sendParams/uplink',
+                request_serializer=message__pb2.RequestMessage.SerializeToString,
+                response_deserializer=message__pb2.ResponseMessage.FromString,
                 )
 
 
 class sendParamsServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def sendParamsToEdge(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def sendParamsToCore(self, request, context):
+    def uplink(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -44,15 +33,10 @@ class sendParamsServicer(object):
 
 def add_sendParamsServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'sendParamsToEdge': grpc.unary_unary_rpc_method_handler(
-                    servicer.sendParamsToEdge,
-                    request_deserializer=message__pb2.Message.FromString,
-                    response_serializer=message__pb2.Time.SerializeToString,
-            ),
-            'sendParamsToCore': grpc.unary_unary_rpc_method_handler(
-                    servicer.sendParamsToCore,
-                    request_deserializer=message__pb2.Message.FromString,
-                    response_serializer=message__pb2.MessageResponse.SerializeToString,
+            'uplink': grpc.unary_unary_rpc_method_handler(
+                    servicer.uplink,
+                    request_deserializer=message__pb2.RequestMessage.FromString,
+                    response_serializer=message__pb2.ResponseMessage.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -65,7 +49,7 @@ class sendParams(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def sendParamsToEdge(request,
+    def uplink(request,
             target,
             options=(),
             channel_credentials=None,
@@ -75,25 +59,8 @@ class sendParams(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/message.sendParams/sendParamsToEdge',
-            message__pb2.Message.SerializeToString,
-            message__pb2.Time.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def sendParamsToCore(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/message.sendParams/sendParamsToCore',
-            message__pb2.Message.SerializeToString,
-            message__pb2.MessageResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/message.sendParams/uplink',
+            message__pb2.RequestMessage.SerializeToString,
+            message__pb2.ResponseMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

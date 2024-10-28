@@ -19,29 +19,29 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\rmessage.proto\x12\x07message\"(\n\x07Message\x12\x0e\n\x06\x64\x65vice\x18\x01 \x01(\t\x12\r\n\x05model\x18\x02 \x01(\x0c\" \n\x0fMessageResponse\x12\r\n\x05model\x18\x01 \x01(\x0c\"\x14\n\x04Time\x12\x0c\n\x04time\x18\x01 \x01(\x02\x32\x85\x01\n\nsendParams\x12\x35\n\x10sendParamsToEdge\x12\x10.message.Message\x1a\r.message.Time\"\x00\x12@\n\x10sendParamsToCore\x12\x10.message.Message\x1a\x18.message.MessageResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\rmessage.proto\x12\x07message\"0\n\x0eRequestMessage\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\r\n\x05model\x18\x02 \x01(\x0c\"4\n\x0fResponseMessage\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\t2K\n\nsendParams\x12=\n\x06uplink\x12\x17.message.RequestMessage\x1a\x18.message.ResponseMessage\"\x00\x62\x06proto3'
 )
 
 
 
 
-_MESSAGE = _descriptor.Descriptor(
-  name='Message',
-  full_name='message.Message',
+_REQUESTMESSAGE = _descriptor.Descriptor(
+  name='RequestMessage',
+  full_name='message.RequestMessage',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='device', full_name='message.Message.device', index=0,
+      name='address', full_name='message.RequestMessage.address', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='model', full_name='message.Message.model', index=1,
+      name='model', full_name='message.RequestMessage.model', index=1,
       number=2, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
@@ -60,22 +60,29 @@ _MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=26,
-  serialized_end=66,
+  serialized_end=74,
 )
 
 
-_MESSAGERESPONSE = _descriptor.Descriptor(
-  name='MessageResponse',
-  full_name='message.MessageResponse',
+_RESPONSEMESSAGE = _descriptor.Descriptor(
+  name='ResponseMessage',
+  full_name='message.ResponseMessage',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='model', full_name='message.MessageResponse.model', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
+      name='status', full_name='message.ResponseMessage.status', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='timestamp', full_name='message.ResponseMessage.timestamp', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -91,67 +98,27 @@ _MESSAGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=68,
-  serialized_end=100,
+  serialized_start=76,
+  serialized_end=128,
 )
 
-
-_TIME = _descriptor.Descriptor(
-  name='Time',
-  full_name='message.Time',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='time', full_name='message.Time.time', index=0,
-      number=1, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=102,
-  serialized_end=122,
-)
-
-DESCRIPTOR.message_types_by_name['Message'] = _MESSAGE
-DESCRIPTOR.message_types_by_name['MessageResponse'] = _MESSAGERESPONSE
-DESCRIPTOR.message_types_by_name['Time'] = _TIME
+DESCRIPTOR.message_types_by_name['RequestMessage'] = _REQUESTMESSAGE
+DESCRIPTOR.message_types_by_name['ResponseMessage'] = _RESPONSEMESSAGE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-Message = _reflection.GeneratedProtocolMessageType('Message', (_message.Message,), {
-  'DESCRIPTOR' : _MESSAGE,
+RequestMessage = _reflection.GeneratedProtocolMessageType('RequestMessage', (_message.Message,), {
+  'DESCRIPTOR' : _REQUESTMESSAGE,
   '__module__' : 'message_pb2'
-  # @@protoc_insertion_point(class_scope:message.Message)
+  # @@protoc_insertion_point(class_scope:message.RequestMessage)
   })
-_sym_db.RegisterMessage(Message)
+_sym_db.RegisterMessage(RequestMessage)
 
-MessageResponse = _reflection.GeneratedProtocolMessageType('MessageResponse', (_message.Message,), {
-  'DESCRIPTOR' : _MESSAGERESPONSE,
+ResponseMessage = _reflection.GeneratedProtocolMessageType('ResponseMessage', (_message.Message,), {
+  'DESCRIPTOR' : _RESPONSEMESSAGE,
   '__module__' : 'message_pb2'
-  # @@protoc_insertion_point(class_scope:message.MessageResponse)
+  # @@protoc_insertion_point(class_scope:message.ResponseMessage)
   })
-_sym_db.RegisterMessage(MessageResponse)
-
-Time = _reflection.GeneratedProtocolMessageType('Time', (_message.Message,), {
-  'DESCRIPTOR' : _TIME,
-  '__module__' : 'message_pb2'
-  # @@protoc_insertion_point(class_scope:message.Time)
-  })
-_sym_db.RegisterMessage(Time)
+_sym_db.RegisterMessage(ResponseMessage)
 
 
 
@@ -162,26 +129,16 @@ _SENDPARAMS = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=125,
-  serialized_end=258,
+  serialized_start=130,
+  serialized_end=205,
   methods=[
   _descriptor.MethodDescriptor(
-    name='sendParamsToEdge',
-    full_name='message.sendParams.sendParamsToEdge',
+    name='uplink',
+    full_name='message.sendParams.uplink',
     index=0,
     containing_service=None,
-    input_type=_MESSAGE,
-    output_type=_TIME,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='sendParamsToCore',
-    full_name='message.sendParams.sendParamsToCore',
-    index=1,
-    containing_service=None,
-    input_type=_MESSAGE,
-    output_type=_MESSAGERESPONSE,
+    input_type=_REQUESTMESSAGE,
+    output_type=_RESPONSEMESSAGE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

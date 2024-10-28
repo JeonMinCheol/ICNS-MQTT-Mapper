@@ -1,93 +1,131 @@
-import numpy as np
-import torch
 import time
+import socket
 import pickle
-
-# list1에 계산을 더해나갈 것이기 때문에 list1은 항상 같은 리스트가 와야함
-def average_homogeneous(list1, list2, weight):
-    if type(list1) != type(list2):
-        print(f"list1 type: {type(list1)} list2 type: {type(list2)}")
-        return average_homogeneous(list1, list2[0], weight)
-    else:
-        shape1, shape2 = list1.shape, list2.shape
-        assert(shape1 == shape2)
-        
-        x = (list1.reshape(-1) + list2.reshape(-1)) * weight
-        return x.reshape(shape1)
-    
-def federated_average(client_parameters, client_sizes):
-    weighted_average = client_parameters[0]
-    weight = 1 / client_sizes
-    dim1 = len(client_parameters[0])
-    
-    for param in client_parameters[1:]:
-        for i in range(dim1):
-            weighted_average[i] = average_homogeneous(weighted_average[i], param[i], weight)
-                
-    return weighted_average
+import uuid
+from federate_average import *
 
 class Aggregator():
-    def __init__(self, client):
+    def __init__(self, broker, client = -1):
         self.BUFFER = [] # 파라미터를 저장할 버퍼
-        self.DEVICE_BUFFER_LEN = 0 # 현재 버퍼에 존재하는 아이템의 개수, 코어로 파라미터를 전송 후 초기화
-        self.DEVICE_LEN = 0  # 입력으로 전달받은 디바이스 개수
-        self.DEVICE_LIST = {} # 파라미터를 전달한 디바이스 목록을 유지
+        self.BUFFER_LENGTH = 0 # 현재 버퍼에 존재하는 아이템의 개수, 코어로 파라미터를 전송 후 초기화
+        self.INVENTORY = set() # 파라미터를 전달한 디바이스 목록을 유지, edge의 경우 set 내부 원소의 개수가 입력받은 것과 동일해야함 (수정 필요)
+        self.INPUT_LENGTH = 0  # 입력으로 전달받은 디바이스, 에지 개수
+        self.uuid = uuid.uuid4()
+        self.agg = False
         self.client = client
         self.DEFAULT_WAITING_TIME = 5
-        self.setDeviceLen()
+        self.broker = broker
+        self.producer = broker.getProducer()
+        self.SIG_SOF = pickle.dumps("SOF")
+        self.SIG_EOF = pickle.dumps("EOF")
+        self.setInput()
         self.setDefaultTime(self.DEFAULT_WAITING_TIME)
         
     def setDefaultTime(self, time=20):
         self.DEFAULT_WAITING_TIME = time
     
-    def setDeviceLen(self):
-        self.DEVICE_LEN = int(input("enter device length: "))
-        
-    def getDeviceLen(self):
-        return self.DEVICE_LEN
-    
-    def isContainDevice(self, device):
-        return self.DEVICE_LIST.__contains__(device)
-    
-    def setDeviceList(self, device):
-        self.DEVICE_LIST[device] = self.DEVICE_BUFFER_LEN
-        self.DEVICE_BUFFER_LEN += 1
-        
-    def getDeviceList(self):
-        return self.DEVICE_LIST, self.DEVICE_BUFFER_LEN
-    
-    def setBuffer(self, device, param):
-        if self.isContainDevice(device):
-            index = int(self.getDeviceList()[0][device])
-            self.getBuffer()[index] = param
+    def setInput(self):
+        if self.client != -1:
+            self.INPUT_LENGTH = int(input("Enter number of device : "))
         else:
-            self.getBuffer().append(param)
-            self.setDeviceList(device)
+            self.INPUT_LENGTH = int(input("Enter number of edge : "))
+        
+    def getInput(self):
+        return self.INPUT_LENGTH
+    
+    def setInventory(self, address):
+        self.INVENTORY.add(address)
+        
+    def getInventory(self):
+        return self.INVENTORY, self.BUFFER_LENGTH
+    
+    # buffer에 데이터 추가하는 메서드
+    def setBuffer(self, address, param):
+        self.getBuffer().append(param)
+        self.setInventory(address)
+        self.BUFFER_LENGTH = len(self.BUFFER)
             
     def getBuffer(self):
         return self.BUFFER
     
     def clearList(self):
         self.BUFFER.clear()
-        self.DEVICE_LIST.clear()
-        self.DEVICE_BUFFER_LEN = 0
+        self.INVENTORY.clear()
+        self.BUFFER_LENGTH = 0
         
-    # timer
     def isTimeout(self, start):
         return (time.time() - start >= self.DEFAULT_WAITING_TIME)
+    
+    def makeChunks(self, data, chunk_size = 128 * 1024): # default : 128KB
+        chunks = [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
+        return chunks
+    
+    def isStillAggregation(self):
+        return self.agg
         
+        
+    # TODO : 1. 리스트 방식에서 카운트 방식으로 수정할 것 (완료)
+    # TODO : 2. aggregation하는 동안 전달되는 파라미터 버리기 (완료)
+    # TODO : 3. 디바이스에서 파라미터 전송한 경우에만 모델 업데이트할 것 (완료, 검증 필요)
+    # TODO : 4. 글로벌 모델을 전달받은 디바이스는 새롭게 학습 후 전달할 것 (완료, 검증 필요)
+    # TODO : 5. 쓰레드 세이프하게 수정 
+    
     def aggregation(self):
-        if self.getDeviceLen() <= self.DEVICE_BUFFER_LEN: # 연결된 디바이스로부터 파라미터를 전부 전달받은 이후 데이터 전송
-            print("aggregation start.")
-            average_weights = federated_average(self.getBuffer(), self.getDeviceLen())
+        # 연결된 디바이스로부터 파라미터를 전부 전달받은 이후 데이터 전송
+        if (self.client != -1 and self.getInput() <= self.BUFFER_LENGTH) or (self.client == -1 and self.getInput() <= len(self.INVENTORY)):
+            print("Aggregation start.")
+            average_weights = federated_average(self.getBuffer(), self.getInput())
+            self.agg = True
+            self.clearList() # 초기화
             
-            # TODO: send parameter to core
-            param = pickle.dumps(average_weights) # Type cast: -> bytes
-        
-            # Send Data (device : ip, model : parameter)
-            # result = self.client.get_url({"device":"test", "model" : param})
-            print("send data to core.")
-            
-            self.clearList()
+            if self.client != -1:
+                # 코어로 모델 전송
+                try:
+                    dump = -1
+                    dump = pickle.dumps(average_weights)
+                    while dump == -1: # dump 대기 (지우면 에러)
+                        pass
+                    
+                    message = {"address" : socket.gethostbyname(socket.gethostname()) + str(self.uuid), "model" : dump}
+                    response = self.client.request(message=message)
+                    print(response)
+                    
+                except Exception as e:
+                    print(e)
+                    
+                else:
+                    print("send to core")
+            else:
+                # global model 반환
+                try:
+                    dump = -1
+                    dump = pickle.dumps(average_weights)
+                    while dump == -1: # dump 대기 (지우면 에러)
+                        pass
+                    
+                    chunks = self.makeChunks(dump)
+                    print(f"chunk size : {len(chunks)}")
+                    
+                    s = time.time()
+                    
+                    # 시작 신호 전송
+                    self.producer.send(topic = "edge", value = self.SIG_SOF)
+                    
+                    for chunk in chunks:
+                        self.producer.send(topic = "edge",  value = chunk)
+                        self.producer.flush()
+                        
+                    # 종료 신호 전송
+                    self.producer.send(topic = "edge", value = self.SIG_EOF)
+                    print(f"send global model. {time.time() - s}/sec")
+                except Exception as e:
+                    print("send error", e)
+                    
+            self.clearList() # 초기화
+            self.agg = False
+                    
+            print("Aggregation complete.")
+        elif self.client != -1:
+            print(f"DEVICE_LEN > BUFFER_LENGTH ({self.getInput()} > {self.BUFFER_LENGTH})")
         else:
-            print(f"DEVICE_LEN > DEVICE_BUFFER_LEN ({self.getDeviceLen()} > {self.DEVICE_BUFFER_LEN})")
+            print(f"DEVICE_LEN > BUFFER_LENGTH ({self.getInput()} > {len(self.INVENTORY)})")
